@@ -91,7 +91,19 @@
           <div class="field">
             <label class="label">Tags</label>
             <div class="control">
-              <input class="input" type="text" placeholder="programming" />
+              <input
+                @input="handleTags"
+                class="input"
+                type="text"
+                placeholder="programming"
+              />
+              <div
+                v-for="tag in form.tags"
+                :key="tag"
+                class="tag is-primary is-medium"
+              >
+                {{ tag }}
+              </div>
             </div>
           </div>
           <div class="field is-grouped">
@@ -124,7 +136,19 @@ import {
   helpers,
 } from "@vuelidate/validators";
 import FormErrors from "../components/FormErrors.vue";
-import { supportedFileType } from "../helpers/validators";
+
+const setupInitialData = () => ({
+  title: "",
+  description: "",
+  type: "product",
+  image: "",
+  price: null,
+  country: "",
+  city: "",
+  tags: [],
+});
+// import { supportedFileType } from "../helpers/validators";
+// add this validator if file type validation is required
 export default {
   name: "ExchangeCreatePage",
   components: {
@@ -132,16 +156,7 @@ export default {
   },
   data() {
     return {
-      form: {
-        title: "",
-        description: "",
-        type: "product",
-        image: "",
-        price: null,
-        country: "",
-        city: "",
-        tags: [],
-      },
+      form: setupInitialData(),
     };
   },
   validations() {
@@ -159,10 +174,10 @@ export default {
         image: {
           required,
           url,
-          supportedFileType: helpers.withMessage(
-            "Invalid format!",
-            supportedFileType
-          ),
+          //   supportedFileType: helpers.withMessage(
+          //     "Invalid format!",
+          //     supportedFileType
+          //   ),
         },
         price: { required, minValue: minValue(1) },
         country: { required },
@@ -177,7 +192,27 @@ export default {
     async createExchange() {
       const isValid = await this.v$.$validate();
       if (isValid) {
-        alert(JSON.stringify(this.form));
+        this.v$.$reset();
+        this.$store.dispatch("exchange/createExchange", {
+          data: this.form,
+          onSuccess: () => {
+            this.form = setupInitialData();
+          },
+        });
+      }
+    },
+    handleTags(event) {
+      const { value } = event.target;
+      if (
+        value &&
+        value.trim().length > 1 &&
+        (value.substr(-1) === "," || value.substr(-1) === " ")
+      ) {
+        const _value = value.split(",")[0].trim();
+        if (!this.form.tags.includes(_value)) {
+          this.form.tags.push(_value);
+        }
+        event.target.value = "";
       }
     },
   },

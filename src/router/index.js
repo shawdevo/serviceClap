@@ -6,6 +6,7 @@ import LoginPage from "../pages/Login";
 import ProfilePage from "../pages/Profile";
 import RegisterPage from "../pages/Register";
 import ExchangeCreatePage from "../pages/ExchangeCreate";
+import ExchangeDetailPage from "../pages/ExchangeDetail";
 
 import { getAuth } from "firebase/auth";
 const routes = [
@@ -29,6 +30,11 @@ const routes = [
     name: "ExchangeCreatePage",
     component: ExchangeCreatePage,
     meta: { onlyAuthUser: true },
+  },
+  {
+    path: "/exchanges/:slug",
+    name: "ExchangeDetail",
+    component: ExchangeDetailPage,
   },
   {
     path: "/profile",

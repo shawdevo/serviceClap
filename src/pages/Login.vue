@@ -16,6 +16,7 @@
                   autofocus=""
                   autocomplete="email"
                 />
+                <form-errors :errors="v$.form.email.$errors" />
               </div>
             </div>
             <div class="field">
@@ -27,6 +28,7 @@
                   placeholder="Your Password"
                   autocomplete="current-password"
                 />
+                <form-errors :errors="v$.form.password.$errors" />
               </div>
             </div>
             <button
@@ -51,8 +53,14 @@
 
 <script>
 import useAuth from "../composition/useAuth";
+import useVuelidate from "@vuelidate/core";
+import { required, email } from "@vuelidate/validators";
+import FormErrors from "../components/FormErrors.vue";
 export default {
   name: "LoginPage",
+  components: {
+    FormErrors,
+  },
   data() {
     return {
       form: {
@@ -61,8 +69,19 @@ export default {
       },
     };
   },
+  validations() {
+    return {
+      form: {
+        email: { required, email },
+        password: { required },
+      },
+    };
+  },
   setup() {
-    return useAuth();
+    return {
+      ...useAuth(),
+      v$: useVuelidate(),
+    };
   },
   watch: {
     isAuthenticated(isAuth) {
@@ -72,8 +91,11 @@ export default {
     },
   },
   methods: {
-    login() {
-      this.$store.dispatch("user/login", this.form);
+    async login() {
+      const isValid = await this.v$.$validate();
+      if (isValid) {
+        this.$store.dispatch("user/login", this.form);
+      }
     },
   },
 };
