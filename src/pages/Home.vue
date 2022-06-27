@@ -1,14 +1,18 @@
 <template>
   <div>
     <!-- HERO START -->
-    <exchange-hero />
+    <exchange-hero :onSearch="filterExchanges" />
     <!-- HERO END -->
 
     <!-- POST LIST START -->
     <exchange-list :exchanges="exchanges" />
     <!-- POST LIST END -->
     <!-- PAGINATION START -->
-    <exchange-pagination />
+    <exchange-pagination
+      :onNextPage="getMoreExchanges"
+      :isFetching="isFetchingMoreData"
+      :page="currentPage"
+    />
     <!-- PAGINATION END -->
   </div>
 </template>
@@ -27,16 +31,33 @@ export default {
   },
   data() {
     return {
-      brandName: "Service Clap",
+      searchedExchangeTitle: "",
     };
   },
+
   computed: {
     exchanges() {
-      return this.$store.state.exchange.items;
+      return this.$store.getters["exchange/filterExchanges"](
+        this.searchedExchangeTitle
+      );
+    },
+    isFetchingMoreData() {
+      return this.$store.state.exchange.pagination.isFetchingData;
+    },
+    currentPage() {
+      return this.$store.getters["exchange/currentPage"];
     },
   },
   created() {
     this.$store.dispatch("exchange/getExchanges");
+  },
+  methods: {
+    getMoreExchanges({ page }) {
+      this.$store.dispatch("exchange/getMoreExchanges", { page });
+    },
+    filterExchanges(searchValue) {
+      this.searchedExchangeTitle = searchValue;
+    },
   },
   // npm install --save css-loader@^5
   // npm install --save sass-loader@^10

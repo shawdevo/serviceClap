@@ -45,9 +45,9 @@
             <div class="level">
               <div class="level-left">
                 <!-- <div class="item-author">{{exchange.user}}</div> -->
-                <div class="item-author">Filip Jerga</div>
+                <div class="item-author">{{ exchange.type }}</div>
               </div>
-              <div class="level-right">27th December 2019</div>
+              <div class="level-right">Date</div>
             </div>
           </div>
         </div>

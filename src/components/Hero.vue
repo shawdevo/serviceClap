@@ -25,10 +25,15 @@
               <span>Search For</span>
             </div>
             <div class="level-item">
-              <input type="text" class="input" placeholder="Driller" />
+              <input
+                @input="handleSearch"
+                type="text"
+                class="input"
+                placeholder="Driller"
+              />
             </div>
             <div class="level-item">
-              <span>Searching "Coding"</span>
+              <span v-if="searchedValue">Searching "{{ searchedValue }}"</span>
             </div>
           </div>
         </div>
@@ -40,6 +45,24 @@
 <script>
 export default {
   name: "HeroComponent",
+  props: {
+    onSearch: {
+      type: Function,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      searchedValue: "",
+    };
+  },
+  methods: {
+    handleSearch(e) {
+      const { value } = e.target;
+      this.searchedValue = value;
+      this.onSearch(value);
+    },
+  },
 };
 </script>
 

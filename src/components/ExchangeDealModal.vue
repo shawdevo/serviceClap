@@ -1,5 +1,8 @@
 <template>
-  <exchange-modal :onModalSubmit="createOpportunity">
+  <exchange-modal
+    :onModalSubmit="createOpportunity"
+    :isDisabled="!isAllowedPrice || hasNotEnoughCredit"
+  >
     <div class="deal">
       <div class="deal-highlight">{{ exchange.user.username }}'s Offer</div>
       <div class="deal-wrapper">
@@ -32,7 +35,7 @@
           <label class="label">Exchange</label>
           <div class="control">
             <div class="select">
-              <select :disabled="isPriceExchange">
+              <select :disabled="isPriceExchange" v-model="selectedExchange">
                 <option
                   v-for="exchange in availableExchanges"
                   :key="exchange.slug"
@@ -44,9 +47,29 @@
             </div>
           </div>
         </div>
-        <div>Your price is: <span class="deal-highlight">1000$</span></div>
-        <div class="price price">You are offering the exact same amount</div>
-        <i>Allowed difference is not less than 20%</i>
+        <div v-if="offeredPrice">
+          <span>Your price is: </span>
+          <span class="deal-highlight">{{ offeredPrice }}$</span>
+        </div>
+
+        <div
+          v-if="percentageDifference !== null"
+          :class="`mb-1 message is-small ${percentageDiffClass}`"
+        >
+          <div class="message-body">
+            {{ priceDifferenceText }}
+          </div>
+        </div>
+
+        <div v-if="hasNotEnoughCredit" class="message is-danger is-small">
+          <div class="message-body">
+            You don't have enough credit for this transaction. Remaining credit:
+            {{ user.credit }}$
+          </div>
+        </div>
+        <i
+          >Allowed difference is not less than {{ ALLOWED_PRICE_DIFFERENCE }}</i
+        >
       </div>
     </div>
     <template #activator>
@@ -77,12 +100,87 @@ export default {
   data() {
     return {
       selectedPrice: null,
+      selectedExchange: null,
       isPriceExchange: false,
+      ALLOWED_PRICE_DIFFERENCE: 20,
     };
   },
+  computed: {
+    user() {
+      return this.$store.state.user.data;
+    },
+    hasNotEnoughCredit() {
+      if (!this.isPriceExchange) {
+        return false;
+      }
+      return this.user.credit < this.selectedPrice;
+    },
+    offeredPrice() {
+      if (this.isPriceExchange) {
+        return this.selectedPrice;
+      } else if (this.selectedExchange) {
+        return this.selectedExchange.price;
+      }
+      return null;
+    },
+    percentageDifference() {
+      if (this.offeredPrice === null || this.offeredPrice === "") {
+        return null;
+      }
+      const priceDifference = this.offeredPrice - this.exchange.price;
+      return ((priceDifference / this.exchange.price) * 100).toFixed(2);
+    },
+    priceDifferenceText() {
+      if (this.percentageDifference === null) {
+        return "";
+      }
+      if (this.percentageDifference === 0) {
+        return "You are offering the exact same amount";
+      }
+      const roundedPercentageDiff =
+        Math.round(this.percentageDifference * 100) / 100;
+      const differenceText = this.percentageDifference > 0 ? "higher" : "lower";
+      return `Offered price is ${Math.abs(
+        roundedPercentageDiff
+      )}% ${differenceText} than exchange price`;
+    },
+    isAllowedPrice() {
+      if (!this.offeredPrice) {
+        return false;
+      }
+      return (
+        this.percentageDifference <= this.ALLOWED_PRICE_DIFFERENCE &&
+        this.percentageDifference >= -this.ALLOWED_PRICE_DIFFERENCE
+      );
+    },
+    percentageDiffClass() {
+      return this.isAllowedPrice ? "is-success" : "is-danger";
+    },
+  },
+  watch: {
+    isPriceExchange(value) {
+      if (value) {
+        this.selectedExchange = null;
+      } else {
+        this.selectedPrice = null;
+      }
+    },
+  },
   methods: {
-    createOpportunity() {
-      alert("Submiting form!");
+    createOpportunity({ onSuccess }) {
+      const data = {
+        title: this.exchange.title,
+        fromUserId: this.user.id,
+        fromExchangeId: this.selectedExchange?.id,
+        toExchangeId: this.exchange.id,
+        toUserId: this.exchange.user.id,
+        price: this.selectedPrice,
+      };
+
+      this.$store.dispatch("opportunity/createOpportunity", {
+        data,
+        onSuccess,
+      });
     },
   },
 };

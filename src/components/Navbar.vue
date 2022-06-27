@@ -11,6 +11,8 @@
             {{ title }}
           </router-link>
           <span
+            @click="isMenuOpen = !isMenuOpen"
+            :class="{ 'is-active': isMenuOpen }"
             role="button"
             tabindex="0"
             class="navbar-burger burger has-text-white"
@@ -21,7 +23,11 @@
             <span></span>
           </span>
         </div>
-        <div id="navbar-menu" class="navbar-menu">
+        <div
+          id="navbar-menu"
+          :class="{ 'is-active': isMenuOpen }"
+          class="navbar-menu"
+        >
           <div class="navbar-end">
             <!-- Loop through the navigation items -->
 
@@ -78,8 +84,26 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      isMenuOpen: false,
+    };
+  },
   setup() {
     return useAuth();
+  },
+  created() {
+    window.addEventListener("resize", this.handleWindowResizing);
+  },
+  unmounted() {
+    window.removeEventListener("resize", this.handleWindowResizing);
+  },
+  methods: {
+    handleWindowResizing(e) {
+      if (this.isMenuOpen && e.target.innerWidth > 1020) {
+        this.isMenuOpen = false;
+      }
+    },
   },
 };
 </script>

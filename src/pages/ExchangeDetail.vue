@@ -9,6 +9,7 @@
               <h1 class="title">
                 {{ exchange.title }}
               </h1>
+              Exchange Owner: {{ isExchangeOwner ? "IS-OWNER" : "NOT-OWNER" }}
               <h2 class="subtitle">
                 {{ exchange.type }}
               </h2>
@@ -39,13 +40,28 @@
                   <div class="card-content">
                     <div class="content m-b-sm">
                       <div class="media-content">
-                        <span class="title is-2">${{ exchange.price }}</span>
+                        <span class="title1 is-2">${{ exchange.price }} </span>
                       </div>
                     </div>
                     <exchange-deal-modal
+                      v-if="canCreateExchange"
                       :exchange="exchange"
                       :availableExchanges="userExchanges"
                     />
+                    <button
+                      v-if="isExchangeOwner"
+                      disabled
+                      class="button is-fullwidth is-large is-danger is-outlined"
+                    >
+                      Yours Exchange
+                    </button>
+                    <router-link
+                      v-if="!isAuth"
+                      to="/login"
+                      class="button is-fullwidth is-large is-success is-outlined"
+                    >
+                      Login to make an offer
+                    </router-link>
                     <div class="content">
                       <ul class="m-t-none">
                         <li>Get item today</li>
@@ -100,6 +116,9 @@ export default {
     user() {
       return this.$store.state.user.data;
     },
+    isAuth() {
+      return this.$store.getters["user/isAuthenticated"];
+    },
     exchange() {
       return this.$store.state.exchange.item;
     },
@@ -108,6 +127,12 @@ export default {
     },
     userExchanges() {
       return this.user?.exchanges || [];
+    },
+    isExchangeOwner() {
+      return this.$store.getters["user/isExchangeOwner"](this.exchangeUser.id);
+    },
+    canCreateExchange() {
+      return this.isAuth && !this.isExchangeOwner;
     },
   },
 };
@@ -122,8 +147,10 @@ export default {
   border-radius: 5px;
   box-shadow: 0 0 1px 1px rgba(20, 23, 28, 0.1),
     0 3px 1px 0 rgba(20, 23, 28, 0.1);
-  .title {
-    color: gray;
+  .title1 {
+    color: grey;
+    font-size: 45px;
+    font-weight: bold;
   }
   .subtitle {
     color: gray;

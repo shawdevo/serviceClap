@@ -7,7 +7,30 @@
       </div>
       <div class="field">
         <label class="title">Avatar</label>
-        <input v-model="userProfile.avatar" class="input" />
+        <div class="file has-name">
+          <label class="file-label">
+            <input
+              @change="handleUpload"
+              class="file-input"
+              type="file"
+              name="resume"
+            />
+            <span class="file-cta">
+              <span class="file-icon">
+                <font-awesome-icon icon="upload" />
+              </span>
+              <span class="file-label"> Choose a file… </span>
+            </span>
+          </label>
+        </div>
+        <progress class="progress" :value="progress" max="100">
+          {{ progress }}%
+        </progress>
+        <img
+          v-if="userProfile.avatar"
+          class="image-preview"
+          :src="userProfile.avatar"
+        />
       </div>
       <div class="field">
         <label class="title">Info about user</label>
@@ -28,7 +51,7 @@
     </form>
     <template #activator>
       <button class="button is-block is-primary is-light is-fullwidth">
-        Custom button
+        Update Profile
       </button>
     </template>
   </exchange-modal>
@@ -50,6 +73,7 @@ export default {
   data() {
     return {
       userProfile: { ...this.user },
+      progress: 0,
     };
   },
   computed: {
@@ -64,8 +88,33 @@ export default {
         onSuccess: () => this.modal.close(),
       });
     },
+    handleUpload(e) {
+      const self = this;
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = function () {
+        self.$store.dispatch("user/uploadImage", {
+          bytes: reader.result,
+          name: file.name,
+          onSuccess: (url) => {
+            self.userProfile.avatar = url;
+          },
+          onProgress: (progress) => {
+            self.progress = progress;
+          },
+        });
+      };
+    },
   },
 };
 </script>
 
-<style></style>
+<style scoped>
+.image-preview {
+  height: 200px;
+}
+.progress {
+  margin-top: 15px;
+}
+</style>
